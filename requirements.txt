@@ -1,0 +1,4 @@
+googlemaps==4.6.0
+pandas==1.4.1
+pony==0.7.16
+python-dotenv==0.19.2
