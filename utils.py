@@ -7,7 +7,7 @@ import pandas as pd
 from pony.orm import db_session
 
 from logger import get_log
-from models import db, BenchmarkLocation
+from db.models import db, LocationIndex, WageStat
 
 load_dotenv()
 
@@ -38,11 +38,6 @@ def get_data(path: str) -> pd.DataFrame:
     return raw_df
 
 
-def parse_values(df: pd.DataFrame) -> pd.DataFrame:
-    df['time_posted'] = pd.to_datetime(df['time_posted'])
-    return df
-
-
 def geocode_data(df: pd.DataFrame) -> pd.DataFrame:
     gmaps = googlemaps.Client(key=GMAPS_CLIENT_KEY)
 
@@ -60,42 +55,49 @@ def geocode_data(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def deduplicate_data(df: pd.DataFrame) -> pd.DataFrame:
-    return df
-
-def lookup_benchmarks(df: pd.DataFrame) -> pd.DataFrame:
-    df['benchmark_location'] = ''
+def index_locations(df: pd.DataFrame) -> pd.DataFrame:
+    df['location_index'] = ''
 
     for idx in range(len(df)):
         lat = df['lat'][idx]
         lng = df['lng'][idx]
-        df.at[idx, 'benchmark_location'] = get_or_create_bl_in_range(lat, lng, BENCHMARK_RADIUS)
+        df.at[idx, 'location_index'] = get_or_create_li_in_range(lat, lng, BENCHMARK_RADIUS)
 
     print(df.head())
 
     return df
 
 @db_session
-def get_or_create_bl_in_range(lat, lng, distance_miles):
+def insert_wage_stats(df: pd.DataFrame):
+    for idx in range(len(df)):
+        WageStat(
+            ctime=df['time_posted'][idx],
+            location_index=df['location_index'][idx],
+            wage=df['wage'][idx],
+            title=df['title'][idx],
+        )
+
+@db_session
+def get_or_create_li_in_range(lat, lng, distance_miles):
     from pony.orm import sql_debug
     sql_debug(True)
-    bl_ids = db.select(
+    index_ids = db.select(
         """
-        id FROM benchmark_location
-        WHERE (
+        id FROM location_index
+        WHERE ifnull((
           3959 * acos(
             cos(radians($lat)) *
             cos(radians(latitude)) *
             cos(radians(longitude) - radians($lng))
             + sin(radians($lat)) * sin(radians(latitude))
           )
-        ) <= $distance_miles
+        ), 0) <= $distance_miles
         """
     )
-    if bl_ids:
-        return bl_ids[0]
+    if index_ids:
+        return index_ids[0]
 
-    bl = BenchmarkLocation(latitude=lat, longitude=lng)
-    bl.flush()
-    print(bl)
-    return bl.id
+    li = LocationIndex(latitude=lat, longitude=lng)
+    li.flush()
+    print(li)
+    return li.id
