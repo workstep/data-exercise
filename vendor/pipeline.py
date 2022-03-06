@@ -25,6 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+
 class Pipeline:
     def __init__(self):
         self.tasks = []
@@ -33,9 +34,11 @@ class Pipeline:
         idx = 0
         if depends_on:
             idx = self.tasks.index(depends_on) + 1
+
         def inner(f):
             self.tasks.insert(idx, f)
             return f
+
         return inner
 
     def run(self, input_):

@@ -6,10 +6,16 @@ from Crypto.Cipher import AES
 from Crypto import Random
 
 BLOCK_SIZE = 16
-pad = lambda s: s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * chr(BLOCK_SIZE - len(s) % BLOCK_SIZE)
-unpad = lambda s: s[:-ord(s[len(s) - 1:])]
 
 password = input("Enter setup password: ")
+
+
+def pad(s):
+    return s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * chr(BLOCK_SIZE - len(s) % BLOCK_SIZE)
+
+
+def unpad(s):
+    return s[:-ord(s[len(s) - 1:])]
 
 
 def encrypt(raw, password):
@@ -29,8 +35,8 @@ def decrypt(enc, password):
 
 
 encrypted = (
-    '6lTgpOZQglF+i/JpheV9wnfocD8Cj+K4CjWAc5kIJ4aXfrGQrGnLe9ZuDl9ENZEcWxiADUf'
-    'r5Ru0RBS4zAgM5fKxhFYnOL9kfYJcOuBvEQo='
+    "6lTgpOZQglF+i/JpheV9wnfocD8Cj+K4CjWAc5kIJ4aXfrGQrGnLe9ZuDl9ENZEcWxiADUf"
+    "r5Ru0RBS4zAgM5fKxhFYnOL9kfYJcOuBvEQo="
 )
 
 # Let us decrypt using our original password
@@ -38,7 +44,7 @@ decrypted = decrypt(encrypted, password)
 msg = bytes.decode(decrypted)
 
 if not len(msg):
-    print('Invalid password.')
+    print("Invalid password.")
 
 with open(".env", "w") as f:
     # Writing data to a file

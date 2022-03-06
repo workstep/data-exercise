@@ -4,7 +4,7 @@ Here we've implemented a simple hypothetical (and partially problematic) spatial
 It could conceivably be employed as part of a larger orchestration for generating a model training dataset.
 
 The pipeline accepts a raw data file as an argument, processes it, and then "stores" the results to a "data warehouse,"
-which in this example is simply a local `sqlite3` databased, but you could just as easily imagine a Snowflake Connector
+which in this example is simply a local `sqlite3` database, but you could just as easily imagine a Snowflake Connector
 in the `db` module.
 
 ### Data format

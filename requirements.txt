@@ -1,3 +1,4 @@
+flake8==4.0.1
 googlemaps==4.6.0
 pandas==1.4.1
 pony==0.7.16

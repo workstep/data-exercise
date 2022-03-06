@@ -1,4 +1,5 @@
-import sys, os
+import os
+import sys
 
 from dotenv import load_dotenv
 
@@ -12,7 +13,7 @@ from db.models import db, LocationIndex, WageStat
 load_dotenv()
 
 BENCHMARK_RADIUS = 60  # Miles
-GMAPS_CLIENT_KEY = os.getenv('GMAPS_CLIENT_KEY')
+GMAPS_CLIENT_KEY = os.getenv("GMAPS_CLIENT_KEY")
 LOG = get_log(__name__)
 
 
@@ -32,7 +33,7 @@ def get_data(path: str) -> pd.DataFrame:
         sys.exit(1)
 
     if raw_df.shape[0] == 0:
-        LOG.exception(f"data: source data empty.")
+        LOG.exception("data: source data empty.")
         sys.exit(1)
 
     return raw_df
@@ -41,41 +42,41 @@ def get_data(path: str) -> pd.DataFrame:
 def geocode_data(df: pd.DataFrame) -> pd.DataFrame:
     gmaps = googlemaps.Client(key=GMAPS_CLIENT_KEY)
 
-    df['lng'] = ''
-    df['lat'] = ''
+    df["lng"] = ""
+    df["lat"] = ""
 
     for idx in range(len(df)):
-        result = gmaps.geocode(df['address'][idx])
+        result = gmaps.geocode(df["address"][idx])
         try:
-            df.at[idx, 'lat'] = result[0]['geometry']['location']['lat']
-            df.at[idx, 'lng'] = result[0]['geometry']['location']['lng']
+            df.at[idx, "lat"] = result[0]["geometry"]["location"]["lat"]
+            df.at[idx, "lng"] = result[0]["geometry"]["location"]["lng"]
         except IndexError:
-            LOG.debug(f"geocoding: address not found")
+            LOG.debug("geocoding: address not found")
 
     return df
 
 
 def index_locations(df: pd.DataFrame) -> pd.DataFrame:
-    df['location_index'] = ''
+    df["location_index"] = ""
 
     for idx in range(len(df)):
-        lat = df['lat'][idx]
-        lng = df['lng'][idx]
-        df.at[idx, 'location_index'] = get_or_create_li_in_range(lat, lng, BENCHMARK_RADIUS)
-
-    print(df.head())
+        lat = df["lat"][idx]
+        lng = df["lng"][idx]
+        df.at[idx, "location_index"] = get_or_create_li_in_range(lat, lng, BENCHMARK_RADIUS)
 
     return df
+
 
 @db_session
 def insert_wage_stats(df: pd.DataFrame):
     for idx in range(len(df)):
         WageStat(
-            ctime=df['time_posted'][idx],
-            location_index=df['location_index'][idx],
-            wage=df['wage'][idx],
-            title=df['title'][idx],
+            ctime=df["time_posted"][idx],
+            location_index=df["location_index"][idx],
+            wage=df["wage"][idx],
+            title=df["title"][idx],
         )
+
 
 @db_session
 def get_or_create_li_in_range(lat, lng, distance_miles):
@@ -99,5 +100,5 @@ def get_or_create_li_in_range(lat, lng, distance_miles):
 
     li = LocationIndex(latitude=lat, longitude=lng)
     li.flush()
-    print(li)
+
     return li.id
