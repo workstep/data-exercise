@@ -24,6 +24,9 @@ The scope of the pipeline implementation is to store normalized data entries in 
 
 ### Getting started
 1. Clone this repo locally
+```
+git clone https://github.com/workstep/data-exercise.git
+```
 2. Hop into the directory holding the repo
 ```
 cd data-exercise
