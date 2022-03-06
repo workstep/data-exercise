@@ -32,6 +32,7 @@ def get_data(path: str) -> pd.DataFrame:
         LOG.exception(f"data: source data could not be loaded. {error}")
         sys.exit(1)
 
+    # Check there's data to process
     if raw_df.shape[0] == 0:
         LOG.exception("data: source data empty.")
         sys.exit(1)
@@ -40,8 +41,10 @@ def get_data(path: str) -> pd.DataFrame:
 
 
 def geocode_data(df: pd.DataFrame) -> pd.DataFrame:
+    # GMAPS_CLIENT_KEY is stored in the environment by setup.py
     gmaps = googlemaps.Client(key=GMAPS_CLIENT_KEY)
 
+    # Add columns in the dataframe for lat/lng
     df["lng"] = ""
     df["lat"] = ""
 
@@ -51,12 +54,14 @@ def geocode_data(df: pd.DataFrame) -> pd.DataFrame:
             df.at[idx, "lat"] = result[0]["geometry"]["location"]["lat"]
             df.at[idx, "lng"] = result[0]["geometry"]["location"]["lng"]
         except IndexError:
+            # TODO: something better?
             LOG.debug("geocoding: address not found")
 
     return df
 
 
 def index_locations(df: pd.DataFrame) -> pd.DataFrame:
+    # Add a column in the dataframe for the LocationIndex foreign key
     df["location_index"] = ""
 
     for idx in range(len(df)):
@@ -82,6 +87,9 @@ def insert_wage_stats(df: pd.DataFrame):
 def get_or_create_li_in_range(lat, lng, distance_miles):
     from pony.orm import sql_debug
     sql_debug(True)
+
+
+    # Query LocationIndex using the Haversine formula
     index_ids = db.select(
         """
         id FROM location_index
