@@ -44,3 +44,19 @@ env/bin/python3 setup.py
 ```
 env/bin/python3 main.py data.csv
 ```
+
+### Working with the "warehouse"
+You can explore the `sqlite` data warehouse like so:
+```
+sqlite3 db/database.sqlite
+```
+
+You can see the tables stored like so:
+```
+sqlite> .tables
+```
+
+And explore the data with SQL queries like so:
+```
+sqlite> select * from location_index;
+```
