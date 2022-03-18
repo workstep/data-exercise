@@ -35,15 +35,19 @@ cd data-exercise
 ```
 python3 -m venv env
 ```
-4. Install dependencies:
+4. Upgrade pip
+```
+env/bin/pip3 install --upgrade pip
+```
+5. Install dependencies:
 ```
 env/bin/pip3 install -r requirements.txt
 ```
-5. Setup environment for geocoding API access (this will require a password from WorkStep):
+6. Setup environment for geocoding API access (this will require a password from WorkStep):
 ```
 env/bin/python3 setup.py
 ```
-6. Execute the pipeline on a data filepath:
+7. Execute the pipeline on a data filepath:
 ```
 env/bin/python3 main.py data.csv
 ```
