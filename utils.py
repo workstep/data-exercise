@@ -1,3 +1,4 @@
+import math
 import os
 import sys
 
@@ -12,7 +13,7 @@ from db.models import db, LocationIndex, WageStat
 
 load_dotenv()
 
-BENCHMARK_RADIUS = 60  # Miles
+BENCHMARK_SCALE = 60  # Miles
 GMAPS_CLIENT_KEY = os.getenv("GMAPS_CLIENT_KEY")
 LOG = get_log(__name__)
 
@@ -67,7 +68,7 @@ def index_locations(df: pd.DataFrame) -> pd.DataFrame:
     for idx in range(len(df)):
         lat = df["lat"][idx]
         lng = df["lng"][idx]
-        df.at[idx, "location_index"] = get_or_create_li_in_range(lat, lng, BENCHMARK_RADIUS)
+        df.at[idx, "location_index"] = get_or_create_li_in_range(lat, lng, BENCHMARK_SCALE)
 
     return df
 
@@ -88,24 +89,28 @@ def get_or_create_li_in_range(lat, lng, distance_miles):
     from pony.orm import sql_debug
     sql_debug(True)
 
+    miles_per_degree = 69  # approx for both lat and lng, at equator
 
-    # Query LocationIndex using the Haversine formula
+    # Find the bounds of a representative polar coordinate grid "cell"
+    lng_degrees_limit = distance_miles / (math.cos(math.radians(lat)) * miles_per_degree)
+    lat_degrees_limit = distance_miles / miles_per_degree
+
+    # Query any LocationIndex within those bounds
     index_ids = db.select(
         """
-        id FROM location_index
-        WHERE ifnull((
-          3959 * acos(
-            cos(radians($lat)) *
-            cos(radians(latitude)) *
-            cos(radians(longitude) - radians($lng))
-            + sin(radians($lat)) * sin(radians(latitude))
-          )
-        ), 0) <= $distance_miles
+        id FROM location_index WHERE
+            latitude > $lat - $lat_degrees_limit AND
+            latitude < $lat + $lat_degrees_limit AND
+            longitude > $lng - $lng_degrees_limit AND
+            longitude < $lng + $lng_degrees_limit
         """
     )
+
+    # If we found one, use it
     if index_ids:
         return index_ids[0]
 
+    # Otherwise, create a new one for our coordinates
     li = LocationIndex(latitude=lat, longitude=lng)
     li.flush()
 
